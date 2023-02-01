@@ -1,4 +1,5 @@
 #include <limits.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -12,6 +13,7 @@ struct info {
 };
 
 typedef struct info inf;
+pthread_mutex_t lock;
 
 #define s_inf sizeof(inf)
 // #define ALLOCATED 1
@@ -25,9 +27,6 @@ inf * first_free = NULL;
 unsigned int get_data_segment_size();
 unsigned int get_data_segment_free_space_size();
 
-void * ff_malloc(size_t size);
-void ff_free(void * ptr);
-
 void * bf_malloc(size_t size);
 void bf_free(void * ptr);
 
@@ -38,7 +37,12 @@ inf * expand(size_t s);
 void * give_ptr(inf * info);
 inf * split(inf * info, size_t s);
 void occupy(inf * info);
-inf * ff_reuse(size_t s);
 void add_free_block(inf * info);
 void merge(inf * info);
-void _f_free(void * ptr);
+void ff_free(void * ptr);
+
+void * ts_malloc_lock(size_t size);
+void ts_free_lock(void * ptr);
+
+void * ts_malloc_nolock(size_t size);
+void ts_free_nolock(void * ptr);

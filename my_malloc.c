@@ -61,47 +61,6 @@ void occupy(inf * info) {
   // info->type = ALLOCATED;
 }
 
-// find free block with ff logic.
-// do not actually allocate.
-// return NULL if no valid target is found.
-
-inf * ff_reuse(size_t s) {
-  s += s_inf;
-  inf * it = first_free;
-  while (it != NULL) {
-    if (it->size < s) {
-      if (it->next_free != NULL) {
-        it = it->next_free;
-        continue;
-      }
-      else {
-        break;
-      }
-    }
-    else if (it->size - s <= s_inf) {
-      occupy(it);
-      return it;
-    }
-    else if (it->size - s > s_inf) {
-      inf * new = split(it, s);
-      return new;
-    }
-  }
-
-  return NULL;
-}
-
-void * ff_malloc(size_t size) {
-  void * ptr;
-  inf * target = ff_reuse(size);
-
-  if (target == NULL) {
-    target = expand(size);
-  }
-  ptr = give_ptr(target);
-  return ptr;
-}
-
 // find free block with bf logic.
 
 inf * bf_reuse(size_t s) {
@@ -196,7 +155,7 @@ void merge(inf * info) {
   }
 }
 
-void _f_free(void * ptr) {
+void bf_free(void * ptr) {
   inf * info = (inf *)((char *)ptr - s_inf);
   // info->type = FREED;
   add_free_block(info);
@@ -204,14 +163,6 @@ void _f_free(void * ptr) {
   if (info->prev_free != NULL) {
     merge(info->prev_free);
   }
-}
-
-void ff_free(void * ptr) {
-  _f_free(ptr);
-}
-
-void bf_free(void * ptr) {
-  _f_free(ptr);
 }
 
 unsigned int get_data_segment_size() {
@@ -267,4 +218,24 @@ void debug_block(void * block) {
   }
   printf("======================\n");
   return;
+}
+
+void * ts_malloc_lock(size_t size) {
+  pthread_mutex_lock(&lock);
+  void * ptr = bf_malloc(size);
+  pthread_mutex_unlock(&lock);
+  return ptr;
+}
+
+void ts_free_lock(void * ptr) {
+  pthread_mutex_lock(&lock);
+  bf_free(ptr);
+  pthread_mutex_unlock(&lock);
+}
+
+void * ts_malloc_nolock(size_t size) {
+  return ts_malloc_lock(size);
+}
+void ts_free_nolock(void * ptr) {
+  ts_free_lock(ptr);
 }
