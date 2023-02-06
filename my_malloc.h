@@ -13,7 +13,7 @@ struct info {
 };
 
 typedef struct info inf;
-pthread_mutex_t lock;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 #define s_inf sizeof(inf)
 // #define ALLOCATED 1
@@ -23,6 +23,9 @@ inf * first_block = NULL;
 inf * first_free = NULL;
 // inf * last_block = NULL;
 // inf * last_free = NULL;
+
+__thread inf * nlfirst_block = NULL;
+__thread inf * nlfirst_free = NULL;
 
 unsigned int get_data_segment_size();
 unsigned int get_data_segment_free_space_size();
@@ -43,6 +46,19 @@ void ff_free(void * ptr);
 
 void * ts_malloc_lock(size_t size);
 void ts_free_lock(void * ptr);
+
+// no lock
+
+void * nlbf_malloc(size_t size);
+void nlbf_free(void * ptr);
+
+inf * nlexpand(size_t s);
+void * nlgive_ptr(inf * info);
+inf * nlsplit(inf * info, size_t s);
+void nloccupy(inf * info);
+void nladd_free_block(inf * info);
+void nlmerge(inf * info);
+void nlff_free(void * ptr);
 
 void * ts_malloc_nolock(size_t size);
 void ts_free_nolock(void * ptr);

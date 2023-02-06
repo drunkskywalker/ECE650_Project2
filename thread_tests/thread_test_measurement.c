@@ -13,7 +13,7 @@
 #define FREE(p)    ts_free_nolock(p)
 #endif
 
-#define NUM_THREADS  4
+#define NUM_THREADS  8
 #define NUM_ITEMS    20000
 
 double calc_time(struct timespec start, struct timespec end) {
